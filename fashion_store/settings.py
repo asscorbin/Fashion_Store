@@ -22,6 +22,7 @@ INSTALLED_APPS = [
 
     # additional
     'rest_framework',
+    'drf_yasg',
 
     # our apps
     'fashion_store.apps.user',
