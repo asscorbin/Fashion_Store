@@ -1,9 +1,7 @@
 from django.db import models
-
 from django.core.exceptions import ValidationError
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
-
 from fashion_store.apps.product.models import ProductPropertyModel
 from utils.abstract_models import CreateUpdateModel
 
