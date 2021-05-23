@@ -1,13 +1,14 @@
 from django.db import models
 from utils.abstract_models import CreateUpdateModel
 from django.contrib.auth import get_user_model
+from colorfield.fields import ColorField
 
 UserModel = get_user_model()
 
 
 class ColorModel(CreateUpdateModel):
     name = models.CharField(max_length=20, verbose_name="Name")
-    hex = models.CharField(max_length=7, verbose_name="Hex")
+    hex = ColorField(format='hexa')
     description = models.TextField(verbose_name="Description")
 
     class Meta:
@@ -51,7 +52,7 @@ class ClothTypeModel(CreateUpdateModel):
 
 
 class BrandModel(CreateUpdateModel):
-    name = models.CharField(max_length=20, verbose_name='Name')
+    name = models.CharField(max_length=50, verbose_name='Name')
     description = models.TextField(verbose_name="Description")
 
     class Meta:
@@ -65,12 +66,24 @@ class BrandModel(CreateUpdateModel):
 
 
 class ProductModel(CreateUpdateModel):
+    man = 'Man'
+    woman = 'Woman'
+    kids = 'Kids'
+
+    gender_choices = [
+        (man, 'Man'),
+        (woman, 'Woman'),
+        (kids, 'Kids')
+    ]
+
     name = models.CharField(max_length=20, verbose_name="Name")
     description = models.TextField(verbose_name="Description")
-
     brand = models.ForeignKey(BrandModel, on_delete=models.CASCADE)
+    gender = models.CharField(max_length=5, choices=gender_choices,
+                              verbose_name='Gender')
     cloth_type = models.ForeignKey(ClothTypeModel, on_delete=models.CASCADE)
     owner = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    material = models.ForeignKey(MaterialModel, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'product'
@@ -83,27 +96,29 @@ class ProductModel(CreateUpdateModel):
 
 
 class ProductPropertyModel(CreateUpdateModel):
-    size_dict = (
-        ("XS", 'XS'),
-        ("S", 'S'),
-        ("M", 'M'),
-        ("L", 'L'),
-        ("XL", 'XL'),
-        ("XLL", 'XLL'))
+    s = 'S'
+    m = 'M'
+    l = 'L'
+    xl = 'XL'
+    xxl = 'XXL'
 
-    size = models.CharField(max_length=4, choices=size_dict,
+    size_choices = [
+        (s, 'S'),
+        (m, 'M'),
+        (l, 'L'),
+        (xl, 'XL'),
+        (xxl, 'XXL')
+    ]
+
+    size = models.CharField(max_length=4, choices=size_choices,
                             verbose_name='Size')
     quantity = models.PositiveIntegerField(verbose_name="Quantity")
     price = models.PositiveIntegerField(verbose_name="Price")
-
-    product = models.ForeignKey(ProductModel, on_delete=models.CASCADE)
-    material = models.ForeignKey(MaterialModel, on_delete=models.CASCADE)
+    product = models.ForeignKey(ProductModel, on_delete=models.CASCADE,
+                                related_name="product_property")
     color = models.ForeignKey(ColorModel, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'product_property'
         verbose_name = 'ProductProperty'
         verbose_name_plural = 'ProductProperties'
-
-    def __str__(self):
-        return self.product

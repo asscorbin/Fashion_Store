@@ -1,6 +1,7 @@
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
+from phone_field import PhoneField
 
 from utils.abstract_models import CreateUpdateModel
 
@@ -31,11 +32,11 @@ class UserModel(AbstractBaseUser, PermissionsMixin, CreateUpdateModel):
     email = models.EmailField(max_length=100, verbose_name='Email',
                               unique=True)
     first_name = models.CharField(max_length=20, verbose_name='Name')
+    phone = PhoneField(blank=True, help_text='Contact phone number')
     last_name = models.CharField(max_length=20, verbose_name='Last Name')
-    city = models.CharField(max_length=100, verbose_name='City',
-                            default='')
-    state = models.CharField(max_length=100, verbose_name='State', default='')
-    zip = models.CharField(max_length=100, verbose_name='ZIP', default='')
+    city = models.CharField(max_length=100, verbose_name='City', blank=True)
+    state = models.CharField(max_length=100, verbose_name='State', blank=True)
+    zip = models.CharField(max_length=100, verbose_name='ZIP', blank=True)
 
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
