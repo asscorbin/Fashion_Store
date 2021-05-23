@@ -20,12 +20,32 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # additional
+    'rest_framework',
+    'drf_yasg',
+    'colorfield',
+
     # our apps
     'fashion_store.apps.user',
     'fashion_store.apps.product',
     'fashion_store.apps.order',
     'fashion_store.apps.images',
 ]
+
+REST_FRAMEWORK = {
+    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.'
+    #                             'pagination.PageNumberPagination',
+    # 'PAGE_SIZE': 10,
+
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

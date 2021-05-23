@@ -8,11 +8,15 @@ class CreateUpdateModel(models.Model):
         db_index=True,
         auto_now_add=True,
         editable=False,
+        blank=True,
+        null=True
     )
     updated = models.DateTimeField(
         db_index=True,
         auto_now=True,
         editable=False,
+        blank=True,
+        null=True
     )
 
     class Meta:
