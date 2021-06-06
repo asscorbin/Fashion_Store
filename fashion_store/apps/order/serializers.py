@@ -27,6 +27,7 @@ class OrderOutputStorySerializer(ModelSerializer):
 class SelectedProductSerializer(ModelSerializer):
     """ Selected Product for CartSerializer """
     product_property = ProductPropertyForOutputHistorySerializer()
+    price = models.PositiveIntegerField(verbose_name="price")
 
     class Meta:
         model = SelectedProductsModel

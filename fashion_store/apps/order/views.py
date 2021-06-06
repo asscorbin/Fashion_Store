@@ -4,6 +4,7 @@ from rest_framework.generics import ListAPIView, GenericAPIView, CreateAPIView, 
 from rest_framework.mixins import DestroyModelMixin, UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.forms.models import model_to_dict
 
 from .serializers import *
 
@@ -23,8 +24,12 @@ class OrderView(ListAPIView):
 
 
 class CartDetailView(DestroyModelMixin, UpdateModelMixin, GenericAPIView):
-    """ Endpoints that allows owner R U D Order"""
+    """ Endpoints that allows owner work with cart
+        Create Delete cart, get cart content, order preparation and Update """
+
     serializer_class = CartSerializer
+
+    # __________________________ for view ______________________________
 
     def get_permissions(self):
         if self.request.method == 'GET':
@@ -32,30 +37,41 @@ class CartDetailView(DestroyModelMixin, UpdateModelMixin, GenericAPIView):
         else:
             return [IsAuthenticated(), ]  # HaveCartPermission
 
-    # __________________________ get _______________________________________
-    def get_cart_or_create(self, user=None):
-        if user is None:
-            user = self.request.user
-        cart = OrderModel.objects.get_or_create(user=user, status='Opened')
+    # _____________________________ API ________________________________
 
-        return cart[0]
+    def get(self, request, **kwargs):
+
+        if self.check_order_preparation():
+            data = self.get_order_preparation_api()
+        else:
+            data = self.get_cart_api()
+
+        return Response(data=data, status=status.HTTP_200_OK)
+
+    # ___________________________ additional api ______________________
 
     def get_cart_api(self):
         cart = self.get_cart_or_create()
         serialized_cart = CartSerializer(cart)
         return serialized_cart.data
 
-    def check_order_preparation(self):
-        return self.request.query_params.get('order_preparation') is not None
+    def get_order_preparation_api(self):
+        order_preparation = self.get_order_preparation_2()
 
-    @staticmethod
-    def check_available_quantity(selected_p):
-        id_ = selected_p['product_property_id']
-        p_property = ProductPropertyModel.objects.get(id=id_)
+        # order_preparation = self.add_total_price(order_preparation)
 
-        available = p_property.quantity
-        necessary = selected_p['quantity']
-        return available - necessary >= 0
+        output_serializer = AvailableOrderSerializer(data=order_preparation)
+        output_serializer.is_valid()
+        return output_serializer.data
+
+    # __________________________ api functions _________________________
+
+    def get_cart_or_create(self, user=None):
+        if user is None:
+            user = self.request.user
+        cart = OrderModel.objects.get_or_create(user=user, status='Opened')
+
+        return cart[0]
 
     def get_order_preparation(self):
         cart = self.get_cart_or_create()
@@ -84,18 +100,51 @@ class CartDetailView(DestroyModelMixin, UpdateModelMixin, GenericAPIView):
 
         return order_preparation
 
+    def get_order_preparation_2(self):
+        cart = self.get_cart_or_create()
+        order_preparation = {"available": {}, "out_of_stock": [],
+                             "owners_id": []}
+
+        q_selected_p = SelectedProductView.get_selected_product_by_order_2(cart)
+
+        for selected_p in q_selected_p:
+            owner = selected_p.product_property.product.owner
+
+            data = model_to_dict(selected_p)
+            data['price'] = selected_p.product_property.price
+
+            # if not self.check_available_quantity(selected_p):
+            #     order_preparation["out_of_stock"].append(selected_p)
+            #     continue
+
+            if owner.id in order_preparation['owners_id']:
+                order_preparation["available"][owner.id]['products']. \
+                    append(data)
+            else:
+                order_preparation['owners_id'].append(owner.id)
+
+                data_ = {'owner': owner, 'products': [data], 'price': 0}
+                order_preparation["available"][owner.id] = data_
+
+        return order_preparation
+
+    # __________________________ checking  _____________________________
+
+    def check_order_preparation(self):
+        return self.request.query_params.get('order_preparation') is not None
+
+    @staticmethod
+    def check_available_quantity(selected_p):
+        id_ = selected_p['product_property_id']
+        p_property = ProductPropertyModel.objects.get(id=id_)
+
+        available = p_property.quantity
+        necessary = selected_p['quantity']
+        return available - necessary >= 0
+
     @staticmethod
     def add_total_price(data_):
         return data_
-
-    def get_order_preparation_api(self):
-        order_preparation = self.get_order_preparation()
-
-        order_preparation = self.add_total_price(order_preparation)
-
-        output_serializer = AvailableOrderSerializer(data=order_preparation)
-        output_serializer.is_valid()
-        return output_serializer.data
 
     #
     #     queryset = SelectedProductView.get_order_selected_product(order)
@@ -122,16 +171,6 @@ class CartDetailView(DestroyModelMixin, UpdateModelMixin, GenericAPIView):
     #
     #     output["available"] = self.rename_dict_key(output["available"])
     #
-
-    # API method
-    def get(self, request, **kwargs):
-
-        if self.check_order_preparation():
-            data = self.get_order_preparation_api()
-        else:
-            data = self.get_cart_api()
-
-        return Response(data=data, status=status.HTTP_200_OK)
 
     # API method
     # def delete(self, request, *args, **kwargs):
@@ -195,15 +234,22 @@ class CartDetailView(DestroyModelMixin, UpdateModelMixin, GenericAPIView):
 # def check_enough_quantity(product_property, quantity):
 #     return product_property.quantity - quantity >= 0
 
-
 class SelectedProductView(CreateAPIView):
     serializer_class = CreateSelectedProductSerializer
     permission_classes = (IsAuthenticated,)  # HaveCart
 
     @staticmethod
     def get_selected_product_by_order(order):
-        return SelectedProductsModel.objects.filter(order=order).values(
+        selected_p = SelectedProductsModel.objects.filter(order=order).values(
             'id', 'product_property_id', 'order_id', 'quantity')
+        list(selected_p)
+        return selected_p
+
+    @staticmethod
+    def get_selected_product_by_order_2(order):
+        selected_p = SelectedProductsModel.objects.filter(order=order)
+        list(selected_p)
+        return selected_p
 
     def perform_create(self, serializer):
         user = self.request.user
