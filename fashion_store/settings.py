@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_yasg',
     'colorfield',
+    'corsheaders',
 
     # our apps
     'fashion_store.apps.user',
@@ -51,6 +52,7 @@ SIMPLE_JWT = {
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -82,14 +84,14 @@ WSGI_APPLICATION = 'fashion_store.wsgi.application'
 #     'default': dj_database_url.config(default=ENV.get('DB_URL'))
 # }
 
-# DATABASES = {
-#     'default': dj_database_url.config(
-#         default='postgres://asscorbin:6197890@127.0.0.1:5433/fashion_store')
-# }
-
 DATABASES = {
-    'default': dj_database_url.config(conn_max_age=600)
+    'default': dj_database_url.config(
+        default='postgres://asscorbin:6197890@127.0.0.1:5433/fashion_store')
 }
+
+# DATABASES = {
+#     'default': dj_database_url.config(conn_max_age=600)
+# }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -124,6 +126,9 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 STATIC_ROOT = os.path.join(Path(__file__).resolve().parent, 'static')
 MEDIA_ROOT = os.path.join(Path(__file__).resolve().parent, 'media')
+
+# cors
+CORS_ORIGIN_ALLOW_ALL = True
 
 # Activate Django-Heroku.
 if ENV.get("ENV") != "DEV":
