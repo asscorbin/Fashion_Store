@@ -82,10 +82,13 @@ WSGI_APPLICATION = 'fashion_store.wsgi.application'
 #     'default': dj_database_url.config(default=ENV.get('DB_URL'))
 # }
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default='postgres://asscorbin:6197890@127.0.0.1:5433/fashion_store')
-}
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default='postgres://asscorbin:6197890@127.0.0.1:5433/fashion_store')
+# }
+# DATABASES = {
+#     'default': dj_database_url.config(conn_max_age=600)
+# }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -116,3 +119,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Activate Django-Heroku.
+if ENV.get("ENV") != "DEV":
+    import django_heroku
+
+    django_heroku.settings(locals())
