@@ -22,5 +22,6 @@ urlpatterns = [
          name='schema-swagger-ui'),
 
     path('user/', include('fashion_store.apps.user.urls')),
-    path('product/', include('fashion_store.apps.product.urls'))
+    path('product/', include('fashion_store.apps.product.urls')),
+    path('order/', include('fashion_store.apps.order.urls'))
 ]

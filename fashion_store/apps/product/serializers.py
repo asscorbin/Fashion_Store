@@ -54,15 +54,6 @@ class CreateProductPropertySerializer(ModelSerializer):
         exclude = ['created', 'updated']
 
 
-# class UpdateProductPropertySerializer(ModelSerializer):
-#     """ Serializer for update Product Property
-#         Used with view ProductDetailView """
-#
-#     class Meta:
-#         model = ProductPropertyModel
-#         exclude = ['created', 'updated',]
-
-
 class ProductSerializer(ModelSerializer):
     """ Serializer for output Product with Product Property """
     owner = UserProductSerializer()
@@ -86,14 +77,11 @@ class CreateProductSerializer(ModelSerializer):
         model = ProductModel
         exclude = ('created', 'updated', 'owner')
 
-    # def update(self, instance, validated_data):
-    #     product_properties = validated_data.pop('product_properties', None)
-    #
-    #     product = ProductModel.objects.filter(pk=instance.pk).update(
-    #         **validated_data)
-    #     if not product_properties:
-    #         return instance
-    #
-    #     list_properties = ProductPropertyModel.objects.filter(
-    #         product__id=product.id).values_list()
-    #     print(list_properties)
+
+class ProductPropertyForOutputHistorySerializer(ModelSerializer):
+    """ For output user history of buying
+    Order/SelectedProduct/__ProductProperty__"""
+
+    class Meta:
+        model = ProductPropertyModel
+        fields = ('id', 'size', 'price', 'color')
