@@ -117,9 +117,13 @@ USE_L10N = True
 
 USE_TZ = True
 
-STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+STATIC_ROOT = os.path.join(Path(__file__).resolve().parent, 'static')
+MEDIA_ROOT = os.path.join(Path(__file__).resolve().parent, 'media')
 
 # Activate Django-Heroku.
 if ENV.get("ENV") != "DEV":
