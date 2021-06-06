@@ -6,11 +6,12 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 ENV = os.environ
 
-SECRET_KEY = ENV.get('SECRET_KEY', '')
+SECRET_KEY = ENV.get('SECRET_KEY',
+                     '(p)jbqy977d_yp@%774(osy-x^21_snvz)27_6w@xvxebg3ry$')
 
-DEBUG = ENV.get('DEBUG')
+DEBUG = ENV.get('DEBUG', True)
 
-ALLOWED_HOSTS = [ENV.get('ALLOWED_HOSTS')]
+ALLOWED_HOSTS = [ENV.get('ALLOWED_HOSTS'), '*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -43,7 +44,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),  # minutes=60
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
 
@@ -77,8 +78,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'fashion_store.wsgi.application'
 
+# DATABASES = {
+#     'default': dj_database_url.config(default=ENV.get('DB_URL'))
+# }
+
 DATABASES = {
-    'default': dj_database_url.config(default=ENV.get('DB_URL'))
+    'default': dj_database_url.config(
+        default='postgres://asscorbin:6197890@127.0.0.1:5433/fashion_store')
 }
 
 AUTH_PASSWORD_VALIDATORS = [

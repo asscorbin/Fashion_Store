@@ -11,7 +11,7 @@ from .models import *
 
 class BrandViewSet(ListCreateAPIView):
     """ Endpoint for create and list Brand
-        Can create and """
+        Can create only admin """
 
     serializer_class = BrandSerializer
     queryset = BrandModel.objects.all()
@@ -23,10 +23,11 @@ class BrandViewSet(ListCreateAPIView):
 
 
 class BrandDetailView(RetrieveUpdateDestroyAPIView):
-    """ Endpoint for create and list Brand """
+    """ Endpoint for R U D Brand
+        Can U D only admin """
     serializer_class = BrandSerializer
     queryset = BrandModel.objects.all()
-    http_method_names = ['get', 'put', 'delete']
+    http_method_names = ('get', 'put', 'delete')
 
     def get_permissions(self):
         if self.request.method in ('PUT', 'DELETE'):
@@ -35,12 +36,16 @@ class BrandDetailView(RetrieveUpdateDestroyAPIView):
 
 
 class ColorCreateView(CreateAPIView):
+    """ Endpoint for C and list Color
+        Can C only admin """
     serializer_class = ColorSerializer
     queryset = ColorModel.objects.all()
     # permission_classes = (IsAdminUser,)
 
 
 class ColorDetailView(UpdateAPIView, DestroyAPIView):
+    """ Endpoint for U D Brand
+        Only for admin """
     serializer_class = ColorSerializer
     queryset = ColorModel.objects.all()
     http_method_names = ('put', 'delete')
@@ -92,6 +97,12 @@ class ProductListCreateView(ListCreateAPIView):
         else:
             return CreateProductSerializer
 
+    @staticmethod
+    def create_property(property_data):
+        instance = CreateProductPropertySerializer(data=property_data)
+        instance.is_valid()
+        instance.save()
+
     def create(self, request, *args, **kwargs):
         product_properties = self.request.data.pop("product_properties", None)
 
@@ -104,58 +115,50 @@ class ProductListCreateView(ListCreateAPIView):
 
         for product_property in product_properties:
             product_property["product"] = product.data["id"]
-
-            obj_product_properties = CreateProductPropertySerializer(
-                data=product_property)
-            obj_product_properties.is_valid()
-            obj_product_properties.save()
+            self.create_property(product_property)
 
         return Response(data={"message": "Product successfully created"},
                         status=status.HTTP_201_CREATED)
 
 
 class ProductDetailView(RetrieveUpdateDestroyAPIView):
+    """ Endpoint that allows owner to edit product and property """
     serializer_class = CreateProductSerializer
     queryset = ProductModel.objects.all()
 
     # permission_classes = (IsOwner,)
 
-    def update(self, request, *args, **kwargs):
-        properties = self.request.data.pop('product_properties', None)
-        product_id = kwargs["pk"]
-
-        super().update(request, *args, **kwargs)
-
-        if not properties:
-            return Response(data={"message": "Product successfully update"},
-                            status=status.HTTP_205_RESET_CONTENT)
-
+    @staticmethod
+    def update_property(prod_id, new_property):
         old_data = list(ProductPropertyModel.objects.filter(
-            product_id=product_id).values_list("id", flat=True))
+            product_id=prod_id).values_list("id", flat=True))
 
-        # update all available and create new
-        for product_property in properties:
-            property_id = product_property.get("id", None)
-            product_property["product"] = product_id
+        for obj_property in new_property:
+            property_id = obj_property.get("id")
+            obj_property["product"] = prod_id
 
-            # update
             if property_id in old_data:
                 ProductPropertyModel.objects.filter(id=property_id).update(
-                    **product_property)
-
-            # create
+                    **obj_property)
             else:
-                instance = CreateProductPropertySerializer(
-                    data=product_property)
-                instance.is_valid()
-                instance.save()
+                ProductListCreateView.create_property(obj_property)
 
-        # delete
-        new_list_id = [x["id"] for x in properties if x.get("id", None)]
-        for old_data_id in old_data:
-            if old_data_id not in new_list_id:
-                ProductPropertyModel.objects.filter(id=old_data_id).delete()
+    @staticmethod
+    def delete_property(delete_property):
+        for property_id in delete_property:
+            ProductPropertyModel.objects.filter(id=property_id).delete()
 
-        return Response(data={"message": "Product and product property "
-                                         "successfully update"},
+    def update(self, request, *args, **kwargs):
+        prod_id = kwargs["pk"]
+        super().update(request, *args, **kwargs)
+
+        new_property = self.request.data.pop('product_properties', None)
+        if new_property:
+            self.update_property(prod_id, new_property)
+
+        delete_property = self.request.data.pop('delete_property', None)
+        if delete_property:
+            self.delete_property(delete_property)
+
+        return Response(data={"message": "successfully update"},
                         status=status.HTTP_205_RESET_CONTENT)

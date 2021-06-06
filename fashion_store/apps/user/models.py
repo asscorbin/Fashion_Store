@@ -32,7 +32,7 @@ class UserModel(AbstractBaseUser, PermissionsMixin, CreateUpdateModel):
     email = models.EmailField(max_length=100, verbose_name='Email',
                               unique=True)
     first_name = models.CharField(max_length=20, verbose_name='Name')
-    phone = PhoneField(blank=True, help_text='Contact phone number')
+    phone = PhoneField(blank=True, help_text='Contact phone number', null=True)
     last_name = models.CharField(max_length=20, verbose_name='Last Name')
     city = models.CharField(max_length=100, verbose_name='City', blank=True)
     state = models.CharField(max_length=100, verbose_name='State', blank=True)

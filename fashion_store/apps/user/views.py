@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
 from rest_framework import status
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView, \
     RetrieveUpdateDestroyAPIView
@@ -54,15 +56,26 @@ class UserRetriveUpdateView(RetrieveUpdateDestroyAPIView):
                 status=status.HTTP_400_BAD_REQUEST)
         return super().update(self, request, *args, **kwargs)
 
-# @api_view(['PATCH', ])
-# def update_password(request):
-#     password = request.data.get('password', None)
-#     new_password = request.data.get('new_password', None)
-#
-#     if password
-#         def set_password(self, raw_password):
-#             self.password = make_password(raw_password)
-#             self._password = raw_password
+
+@api_view(['PATCH', ])
+def update_password(request):
+    user = request.user
+
+    user_instance = UserModel.objects.get(id=user.id)
+    hashed_password = user_instance.password
+
+    password = request.data.get('password', None)
+    new_password = request.data.get('new_password', None)
+
+    if not check_password(password, hashed_password):
+        return Response(data={"message": "You write incorrect password"},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    user_instance.set_password(new_password)
+    user_instance.save()
+
+    return Response(data={"message": "Successfully update user password"},
+                    status=status.HTTP_200_OK)
 #
 # @api_view(['PATCH', ])
 # def update_email(request):
